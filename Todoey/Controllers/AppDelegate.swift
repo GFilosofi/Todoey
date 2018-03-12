@@ -13,18 +13,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
         return true
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
-        print("..willResignActive")
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        print("..didEnterBackground")
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -36,7 +33,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        print("..willTerminate")
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 }
