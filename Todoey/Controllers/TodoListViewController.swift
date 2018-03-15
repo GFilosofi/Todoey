@@ -7,16 +7,23 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
-
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last?.appendingPathComponent("Items.plist")
 
     var itemArray = [Item]()
     let defaults = UserDefaults.standard
 
+    lazy var viewContext: NSManagedObjectContext = {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        return appDelegate.persistentContainer.viewContext
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+
+        //reload the item list from the database
         loadItems()
     }
     
@@ -40,9 +47,23 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        //itemArray[indexPath.row].setValue("Completed", forKey: "title")
         saveItems()
         tableView.deselectRow(at: indexPath, animated: true)
         tableView.reloadData()
+    }
+    
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            viewContext.delete(itemArray[indexPath.row])
+            itemArray.remove(at: indexPath.row)
+            saveItems()
+            tableView.reloadData()
+        }
     }
     
     //MARK - Add New Items
@@ -56,10 +77,10 @@ class TodoListViewController: UITableViewController {
             localTextField = alertTextField
         })
         let alertAction = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            let item = Item()
-            //item.title = alert.textFields![0].text!
+            let item = Item(context: self.viewContext)
             item.title = localTextField.text!
             item.done = false
+            
             self.itemArray.append(item)
             self.tableView.reloadData()
             self.saveItems()
@@ -68,25 +89,42 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            do {
-                let decoder = PropertyListDecoder()
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error in decoding item array, \(error)")
-            }
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+        do {
+            itemArray = try viewContext.fetch(request)
+        } catch {
+            print("Error fetching data from context, \(error)")
         }
+        tableView.reloadData()
     }
     
     func saveItems() {
-        let encoder = PropertyListEncoder()
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try viewContext.save()
         } catch {
-            print("Error encoding item array, \(error)")
+            print("Error saving context to persistent container, \(error)")
         }
     }
 }
 
+//MARK - Search Bar methods
+extension TodoListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let fetchSearchedItems: NSFetchRequest<Item> = Item.fetchRequest()
+        fetchSearchedItems.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+        fetchSearchedItems.sortDescriptors = [sortDescriptor]
+        loadItems(with: fetchSearchedItems)
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        //when user clicks cross button all items are reloaded in the table view
+        if searchBar.text?.count == 0 {
+            loadItems()
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+
+        }
+    }
+}
