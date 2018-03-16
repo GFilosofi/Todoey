@@ -12,7 +12,6 @@ import CoreData
 class TodoListViewController: UITableViewController {
 
     var itemArray = [Item]()
-    let defaults = UserDefaults.standard
 
     lazy var viewContext: NSManagedObjectContext = {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
@@ -27,7 +26,7 @@ class TodoListViewController: UITableViewController {
         loadItems()
     }
     
-    //MARK - Table View Data Source methods
+    //MARK - TableView DataSource and Delegate Methods
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -65,30 +64,8 @@ class TodoListViewController: UITableViewController {
             tableView.reloadData()
         }
     }
-    
-    //MARK - Add New Items
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        var localTextField = UITextField()
-        let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
 
-        alert.addTextField(configurationHandler: { (alertTextField) in
-            alertTextField.placeholder = "Create new item"
-            alertTextField.textAlignment = .center
-            localTextField = alertTextField
-        })
-        let alertAction = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            let item = Item(context: self.viewContext)
-            item.title = localTextField.text!
-            item.done = false
-            
-            self.itemArray.append(item)
-            self.tableView.reloadData()
-            self.saveItems()
-        }
-        alert.addAction(alertAction)
-        present(alert, animated: true, completion: nil)
-    }
-    
+    //MARK - Data Manipulation Methods
     func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         do {
             itemArray = try viewContext.fetch(request)
@@ -104,6 +81,29 @@ class TodoListViewController: UITableViewController {
         } catch {
             print("Error saving context to persistent container, \(error)")
         }
+    }
+    
+    //MARK - Add New Items
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        var localTextField = UITextField()
+        let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
+
+        alert.addTextField(configurationHandler: { (field) in
+            field.placeholder = "Create new item"
+            field.textAlignment = .center
+            localTextField = field
+        })
+        let alertAction = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            let item = Item(context: self.viewContext)
+            item.title = localTextField.text!
+            item.done = false
+            
+            self.itemArray.append(item)
+            self.tableView.reloadData()
+            self.saveItems()
+        }
+        alert.addAction(alertAction)
+        present(alert, animated: true, completion: nil)
     }
 }
 
