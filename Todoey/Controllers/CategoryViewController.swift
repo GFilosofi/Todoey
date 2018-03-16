@@ -42,6 +42,17 @@ class CategoryViewController: UITableViewController {
         performSegue(withIdentifier: "goToItems", sender: self)
     }
     
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            //categoryArray.remove(at: indexPath.row)
+            deleteCategory()
+        }
+    }
+        
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "goToItems" {
             if let indexPath = tableView.indexPathForSelectedRow {
@@ -62,12 +73,16 @@ class CategoryViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    func saveCategories() {
+    func saveCategories () {
         do {
             try self.viewContext.save()
         } catch {
             print("Error in saving context, \(error)")
         }
+    }
+    
+    func deleteCategory () {
+        print("put here the code to remove the category..")
     }
     
     //MARK - Add New Categories
