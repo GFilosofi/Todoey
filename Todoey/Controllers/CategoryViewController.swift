@@ -42,6 +42,16 @@ class CategoryViewController: UITableViewController {
         performSegue(withIdentifier: "goToItems", sender: self)
     }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "goToItems" {
+            if let indexPath = tableView.indexPathForSelectedRow {
+                if let destinationVC = segue.destination as? TodoListViewController {
+                    destinationVC.selectedCategory = categoryArray[indexPath.row]
+                }
+            }
+        }
+    }
+    
     //MARK - Data Manipulation Methods
     func loadCategories (with request: NSFetchRequest<Category> = Category.fetchRequest()) {
         do {
