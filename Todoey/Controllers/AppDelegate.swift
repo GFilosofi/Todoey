@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -15,7 +16,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
+        // Get the CoreData persistent storage location
+        //print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
+
+        // Get our Realm file's parent directory
+        //print(Realm.Configuration.defaultConfiguration.fileURL!)
+
+//        let data = Data()
+//        data.name = "Gabriele"
+//        data.age = 48
+
+        do {
+            let realm = try Realm()
+//            try realm.write {
+//                realm.add(data)
+//            }
+        } catch {
+            print("Error instantiating realm, \(error)")
+        }
         return true
     }
 
