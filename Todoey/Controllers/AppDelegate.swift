@@ -15,10 +15,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        
+        //Get our Realm file's path (only for development when using a simulator)
+        print(Realm.Configuration.defaultConfiguration.fileURL!)
+        
+        do {
+            let _ = try Realm()
+        } catch {
+            print("Error initialising realm database")
+        }
         return true
-    }
-
-    func applicationWillTerminate(_ application: UIApplication) {
     }
 }
 

@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
     
     var realm = try! Realm()
     
@@ -18,9 +18,6 @@ class CategoryViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadCategories()
-        
-        // Get our Realm file's parent directory (only for development)
-        print(Realm.Configuration.defaultConfiguration.fileURL!)
    }
 
     //MARK - TableView DataSource and Delegate Methods
@@ -33,7 +30,7 @@ class CategoryViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories found yet"
         return cell
     }
@@ -46,24 +43,24 @@ class CategoryViewController: UITableViewController {
         return true
     }
     
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            if let category = categoryArray?[indexPath.row] {
-                do {
-                    try realm.write {
-                        for item in category.items {
-                            realm.delete(item)  //remove all child items
-                        }
-                        realm.delete(category)
-                        tableView.reloadData()
-                    }
-                } catch {
-                    print("Error in Deleting category, \(error)")
-                }
-            }
-        }
-    }
-        
+//    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+//        if editingStyle == .delete {
+//            if let category = categoryArray?[indexPath.row] {
+//                do {
+//                    try realm.write {
+//                        for item in category.items {
+//                            realm.delete(item)
+//                        }
+//                        realm.delete(category)
+//                        tableView.reloadData()
+//                    }
+//                } catch {
+//                    print("Error in Deleting category, \(error)")
+//                }
+//            }
+//        }
+//    }
+    
     //MARK - Manage Segue
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "goToItems" {
@@ -90,7 +87,21 @@ class CategoryViewController: UITableViewController {
         }
     }
     
-    func deleteCategory () {
+    //MARK - Delete Data From Swipe
+    override func updateDataModel(at indexPath: IndexPath) {
+        super.updateDataModel(at: indexPath)
+        if let category = self.categoryArray?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    for item in category.items {
+                        self.realm.delete(item)
+                    }
+                    self.realm.delete(category)
+                }
+            } catch {
+                print("Error in deleting category, \(error)")
+            }
+        }
     }
     
     //MARK - Add New Categories
@@ -114,3 +125,35 @@ class CategoryViewController: UITableViewController {
         self.present(alert, animated: true, completion: nil)
     }
 }
+
+//MARK - SwipeCellKit methods
+//extension CategoryViewController: SwipeTableViewCellDelegate {
+//    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+//        guard orientation == .right else {return nil}
+//        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { (action, indexPath) in
+//            //app dependent code follows:
+//            if let category = self.categoryArray?[indexPath.row] {
+//                do {
+//                    try self.realm.write {
+//                        for item in category.items {
+//                            self.realm.delete(item)
+//                        }
+//                        self.realm.delete(category)
+//                    }
+//                } catch {
+//                    print("Error in deleting category, \(error)")
+//                }
+//            }
+//        }
+//        deleteAction.image = UIImage(named: "trash-icon")
+//        return [deleteAction]
+//    }
+//
+//    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeTableOptions {
+//        var options = SwipeTableOptions()
+//        options.expansionStyle = SwipeExpansionStyle.destructive
+//        //options.transitionStyle = .border
+//        return options
+//    }
+//}
+
