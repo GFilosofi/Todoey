@@ -8,12 +8,14 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class TodoListViewController: SwipeTableViewController {
 
+    @IBOutlet weak var searchBar: UISearchBar!
+    
     let realm = try! Realm()
 
-    //var itemArray = [Item]()
     var items: Results<Item>?
     
     var selectedCategory: Category? {
@@ -26,8 +28,31 @@ class TodoListViewController: SwipeTableViewController {
         super.viewDidLoad()
         //reload the item list from the database
         loadItems()
+        tableView.separatorStyle = .none
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        title = selectedCategory?.name
+        guard let hexColor = selectedCategory?.color else {fatalError()}
+        navBarSetup(withColor: hexColor)
+        searchBar.barTintColor = UIColor(hexString: hexColor)
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        navBarSetup(withColor: "1D98F6")
+    }
+    
+    //MARK - Nav Bar Setup Methods
+    func navBarSetup(withColor colorHex: String) {
+        guard let navBar = navigationController?.navigationBar else {fatalError()}
+        guard let color = UIColor(hexString: colorHex) else {fatalError()}
+        navBar.barTintColor = color
+        navBar.prefersLargeTitles = true
+        navBar.tintColor = ContrastColorOf(color, returnFlat: true)
+        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor :
+            ContrastColorOf(color, returnFlat: true)]
+    }
+
     //MARK - TableView DataSource and Delegate Methods
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -39,9 +64,15 @@ class TodoListViewController: SwipeTableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        
         if let item = items?[indexPath.row] {
             cell.textLabel?.text = item.title
-            cell.accessoryType = item.done ? UITableViewCellAccessoryType.checkmark : UITableViewCellAccessoryType.none
+            cell.accessoryType = item.done ? .checkmark : .none
+            let categoryColor = UIColor(hexString: (selectedCategory?.color)!)
+            if let bgColor = categoryColor?.darken(byPercentage: CGFloat(indexPath.row)/CGFloat(items!.count)) {
+                cell.backgroundColor = bgColor
+                cell.textLabel?.textColor = ContrastColorOf(bgColor, returnFlat: true)
+            }
         } else {
             cell.textLabel?.text = "No Items found yet"
         }
@@ -65,21 +96,6 @@ class TodoListViewController: SwipeTableViewController {
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return true
     }
-
-//    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-//        if editingStyle == .delete {
-//            if let item = items?[indexPath.row] {
-//                do {
-//                    try realm.write {
-//                        realm.delete(item)
-//                    }
-//                } catch {
-//                    print("Error while deleting item, \(error)")
-//                }
-//            }
-//            tableView.reloadData()
-//        }
-//    }
 
     //MARK - Delete Data from Swipe
     override func updateDataModel(at indexPath: IndexPath) {

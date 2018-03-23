@@ -8,16 +8,18 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
     
     var realm = try! Realm()
     
-    var categoryArray: Results<Category>?
+    var categories: Results<Category>?
     
-    override func viewDidLoad() {
+    override func viewDidLoad() { 
         super.viewDidLoad()
         loadCategories()
+        tableView.separatorStyle = .none
    }
 
     //MARK - TableView DataSource and Delegate Methods
@@ -26,12 +28,19 @@ class CategoryViewController: SwipeTableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray?.count ?? 1    //here we use the nil coalescing operator a??b
+        return categories?.count ?? 1    //here we use the nil coalescing operator a??b
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories found yet"
+        let category = categories?[indexPath.row]
+        cell.textLabel?.text = category?.name ?? "No Categories found yet"
+        if let bgColor = UIColor(hexString: (category?.color)!) {
+            cell.backgroundColor = bgColor
+            cell.textLabel?.textColor = ContrastColorOf(bgColor, returnFlat: true)
+        } else {
+            cell.backgroundColor = UIColor(hexString: "1164B2")
+        }
         return cell
     }
     
@@ -43,30 +52,12 @@ class CategoryViewController: SwipeTableViewController {
         return true
     }
     
-//    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-//        if editingStyle == .delete {
-//            if let category = categoryArray?[indexPath.row] {
-//                do {
-//                    try realm.write {
-//                        for item in category.items {
-//                            realm.delete(item)
-//                        }
-//                        realm.delete(category)
-//                        tableView.reloadData()
-//                    }
-//                } catch {
-//                    print("Error in Deleting category, \(error)")
-//                }
-//            }
-//        }
-//    }
-    
     //MARK - Manage Segue
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "goToItems" {
             if let indexPath = tableView.indexPathForSelectedRow {
                 if let destinationVC = segue.destination as? TodoListViewController {
-                    destinationVC.selectedCategory = categoryArray?[indexPath.row]
+                    destinationVC.selectedCategory = categories?[indexPath.row]
                 }
             }
         }
@@ -74,7 +65,7 @@ class CategoryViewController: SwipeTableViewController {
     
     //MARK - Data Manipulation Methods
     func loadCategories() {
-        categoryArray = realm.objects(Category.self)
+        categories = realm.objects(Category.self)
     }
     
     func saveCategory(category: Category) {
@@ -90,7 +81,7 @@ class CategoryViewController: SwipeTableViewController {
     //MARK - Delete Data From Swipe
     override func updateDataModel(at indexPath: IndexPath) {
         super.updateDataModel(at: indexPath)
-        if let category = self.categoryArray?[indexPath.row] {
+        if let category = self.categories?[indexPath.row] {
             do {
                 try self.realm.write {
                     for item in category.items {
@@ -118,6 +109,7 @@ class CategoryViewController: SwipeTableViewController {
         let alertAction = UIAlertAction(title: "Add Category", style: UIAlertActionStyle.default) { (action) -> Void in
             let category = Category()
             category.name = localTextField.text!
+            category.color = UIColor.randomFlat.hexValue()
             self.saveCategory(category: category)
             self.tableView.reloadData()
         }

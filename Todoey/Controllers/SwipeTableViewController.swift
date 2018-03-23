@@ -8,6 +8,7 @@
 
 import UIKit
 import SwipeCellKit
+//import ChameleonFramework
 
 class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegate {
 
@@ -18,6 +19,7 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") as! SwipeTableViewCell
+        //cell.backgroundColor = UIColor.randomFlat
         cell.delegate = self
         return cell
     }
@@ -40,6 +42,7 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
     
     func updateDataModel (at indexPath: IndexPath) {
         print("updating data model in superclass..")
+        
         //override this method in subclass to update the data model
     }
 }
